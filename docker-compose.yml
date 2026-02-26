@@ -1,15 +1,7 @@
-include:
-    - docker/docker-mysql.yml
-
 services:
-    sqlscript:
-        image: jekkos/opensourcepos:sql-master
-        command: /bin/sh -c 'exit 0'
     ospos:
         image: jekkos/opensourcepos:master
         restart: always
-        depends_on:
-            - mysql
         ports:
             - "80:80"
         networks:
@@ -17,11 +9,23 @@ services:
         volumes:
             - uploads:/app/public/uploads
             - logs:/app/writable/logs
+        env_file:
+            - docker/.env
         environment:
-            - CI_ENVIRONMENT=production
+            - CI_ENVIRONMENT=${OSPOS_CI_ENV:-production}
             - FORCE_HTTPS=false
             - PHP_TIMEZONE=UTC
-            - MYSQL_USERNAME=admin
-            - MYSQL_PASSWORD=pointofsale
-            - MYSQL_DB_NAME=ospos
-            - MYSQL_HOST_NAME=mysql
+            - MYSQL_USERNAME=${OSPOS_MYSQL_USERNAME}
+            - MYSQL_PASSWORD=${OSPOS_MYSQL_PASSWORD}
+            - MYSQL_DB_NAME=${OSPOS_MYSQL_DB_NAME}
+            - MYSQL_HOST_NAME=${OSPOS_MYSQL_HOST}
+            - MYSQL_PORT=${OSPOS_MYSQL_PORT:-3306}
+
+volumes:
+    uploads:
+        driver: local
+    logs:
+        driver: local
+
+networks:
+    app_net:
